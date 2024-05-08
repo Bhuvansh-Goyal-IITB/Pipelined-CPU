@@ -4,10 +4,14 @@ use IEEE.std_logic_1164.all;
 entity control is
 	port (
 		instruction_in: in std_logic_vector(15 downto 0);
+		is_empty: in std_logic;
 		wb_control_out: out std_logic_vector(1 downto 0);
 		wb_dest_out: out std_logic_vector(2 downto 0);
 		is_wb_out: out std_logic;
-		is_mem_store_out: out std_logic
+		is_mem_store_out: out std_logic;
+		alu_control_out: out std_logic_vector(4 downto 0);
+		imm_control_out: out std_logic_vector(2 downto 0);
+		branch_control_out: out std_logic_vector(2 downto 0)
 	);
 end entity control;
 
@@ -16,10 +20,16 @@ end entity control;
 
 architecture bhv of control is
 begin
-	control_process: process(instruction_in)
+	control_process: process(instruction_in, is_empty)
 	begin
+		-- INSTRUCTION IS FLUSHED
+		if (is_empty = '1') then
+			is_wb_out <= '0';
+			is_mem_store_out <= '0';
+			branch_control_out <= "000";
+		
 		-- ADD
-		if (instruction_in(15 downto 12) = "0001") then
+		elsif (instruction_in(15 downto 12) = "0001") then
 			wb_control_out <= "00";
 			wb_dest_out <= instruction_in(5 downto 3);
 			is_wb_out <= '1';

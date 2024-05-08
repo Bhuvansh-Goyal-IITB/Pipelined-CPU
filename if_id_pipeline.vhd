@@ -18,8 +18,11 @@ begin
 	begin
 		if (reset = '1') then
 			is_empty <= '1';
-		elsif (clock'event and clock = '1' and enable = '1') then
+		else 
 			is_empty <= '0';
+		end if;
+		
+		if (clock'event and clock = '1' and enable = '1') then
 			instruction_out <= instruction_in;
 			pc_out <= pc_in;
 			pc_update_out <= pc_update_in;
