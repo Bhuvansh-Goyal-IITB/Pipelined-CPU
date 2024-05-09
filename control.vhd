@@ -4,7 +4,6 @@ use IEEE.std_logic_1164.all;
 entity control is
 	port (
 		instruction_in: in std_logic_vector(15 downto 0);
-		is_empty: in std_logic;
 		wb_out: out std_logic_vector(4 downto 0);
 		mem_out: out std_logic;
 		ex_out: out std_logic_vector(13 downto 0)
@@ -14,14 +13,13 @@ end entity control;
 
 architecture bhv of control is
 begin
-	control_process: process(instruction_in, is_empty)
+	control_process: process(instruction_in)
 	begin
-		-- INSTRUCTION IS FLUSHED
-		if (is_empty = '1') then
+		-- NO OP
+		if (instruction_in(15 downto 12) = "1110") then
 			wb_out <= (others => '0');
 			mem_out <= '0';
 			ex_out <= (others => '0');
-		
 		-- ADD
 		elsif (instruction_in(15 downto 12) = "0001") then
 			wb_out <= '0' & instruction_in(5 downto 3) & '1';

@@ -9,6 +9,7 @@ entity cpu is
 		debug_dm_address: in std_logic_vector(5 downto 0);
 		debug_rf_data: out std_logic_vector(15 downto 0);
 		debug_dm_data: out std_logic_vector(15 downto 0);
+		test_output: out std_logic_vector(13 downto 0);
 		c, z: out std_logic
 	);
 end entity cpu;
@@ -22,7 +23,6 @@ architecture bhv of cpu is
 	signal im_memory_out_if: std_logic_vector(15 downto 0);
 	
 	-- ID stage signals
-	signal is_empty_id: std_logic;
 	signal im_memory_out_id: std_logic_vector(15 downto 0);
 	signal pc_out_id: std_logic_vector(15 downto 0);
 	
@@ -125,8 +125,7 @@ begin
 		pc_out_if, 
 		im_memory_out_if,
 		pc_out_id,
-		im_memory_out_id,
-		is_empty_id
+		im_memory_out_id
 	);
 	
 	-- ID stage
@@ -140,7 +139,6 @@ begin
 	
 	control_block: entity work.control port map (
 		im_memory_out_id,
-		is_empty_id,
 		wb_id,
 		mem_id,
 		ex_id
@@ -207,6 +205,8 @@ begin
 		reg_a_ex, reg_b_ex, se6_ex, se9_ex, lli_ex, pc_out_ex
 	);
 	
+	-- EX stage
+	
 	imm_mux_block: entity work.mux_2x1 port map (
 		ex_ex(6),
 		se6_ex, se9_ex,
@@ -221,12 +221,17 @@ begin
 	
 	modify_c <= (not ex_ex(11)) and ex_ex(0);
 	
+	test_output <= ex_ex;
+	
 	flag_block: entity work.flag port map (
 		clock, '1', reset,
 		alu_c_out, alu_z_out,
 		modify_c, ex_ex(0),
 		flag_c_out, flag_z_out
 	);
+	
+	c <= flag_c_out;
+	z <= flag_z_out;
 	
 	wb_condition <= (ex_ex(8) and flag_c_out) or (ex_ex(7) and flag_z_out);
 	

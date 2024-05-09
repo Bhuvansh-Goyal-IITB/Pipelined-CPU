@@ -16,19 +16,21 @@ begin
 	c_out <= c;
 	z_out <= z;
 
-	clock_proc: process(clock, enable, reset) 
+	z_proc: process(clock, enable, reset, modify_z) 
+	begin
+		if (reset = '1') then
+			z <= '0';
+		elsif (clock'event and clock = '1' and enable = '1' and modify_z = '1') then
+			z <= z_in;
+		end if;
+	end process z_proc;
+	
+	c_proc: process(clock, enable, reset, modify_c) 
 	begin
 		if (reset = '1') then
 			c <= '0';
-			z <= '0';
-		elsif (clock'event and clock = '1' and enable = '1') then
-			if (modify_c = '1') then
-				c <= c_in;
-			end if;
-			
-			if (modify_z = '1') then
-				z <= z_in;
-			end if;
+		elsif (clock'event and clock = '1' and enable = '1' and modify_c = '1') then
+			c <= c_in;
 		end if;
-	end process clock_proc;
+	end process c_proc;
 end architecture bhv;
