@@ -4,14 +4,14 @@ use IEEE.numeric_std.all;
 
 entity program_counter is
 	port (
-		pc_in: in std_logic_vector(5 downto 0);
-		enable, clock, reset: in std_logic;
-		pc_out: out std_logic_vector(5 downto 0)
+		clock, enable, reset: in std_logic;
+		pc_in: in std_logic_vector(15 downto 0);
+		pc_out: out std_logic_vector(15 downto 0)
 	);
 end entity program_counter;
 
 architecture bhv of program_counter is
-	signal pc_reg: std_logic_vector(5 downto 0) := (others => '0');
+	signal pc_reg: std_logic_vector(15 downto 0) := (others => '0');
 begin
 	pc_out <= pc_reg;
   

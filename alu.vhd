@@ -28,7 +28,7 @@ begin
 		b_mux_out
 	);
 	
-	adder_block: entity work.adder_nbit port map (
+	adder_block: entity work.adder port map (
 		a, b_mux_out, 
 		adder_carry,
 		adder_output,
@@ -47,7 +47,7 @@ begin
 	
 	z_proc: process(final_output)
 	begin
-		if (final_output = (others => '0')) then
+		if (final_output = x"0000") then
 			z_out <= '1';
 		else 
 			z_out <= '0';

@@ -4,13 +4,13 @@ use IEEE.std_logic_1164.all;
 entity wb_pipeline is
 	port (
 		clock, enable, reset, flush: in std_logic;
-		wb_in: in std_logic_vector(5 downto 0);
-		wb_out: out std_logic_vector(5 downto 0)
+		wb_in: in std_logic_vector(4 downto 0);
+		wb_out: out std_logic_vector(4 downto 0)
 	);
 end entity wb_pipeline;
 
--- wb_control --> alu_out (00), mem_out (01), pc+1 (10), lli (11)
--- wb --> leftmost 2 bits => wb_control, next 3 bits wb_dest, next bit is_wb
+-- wb_control --> alu_out (0), mem_dest (1)
+-- wb --> leftmost bit => wb_control, next 3 bits wb_dest, next bit is_wb
 
 architecture bhv of wb_pipeline is
 	signal wb: std_logic_vector(5 downto 0);

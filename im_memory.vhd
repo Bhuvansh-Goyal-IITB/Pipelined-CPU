@@ -4,7 +4,6 @@ use IEEE.numeric_std.all;
 
 entity im_memory is
 	port (
-		enable, clock, reset: in std_logic;
 		address_in: in std_logic_vector(5 downto 0);
 		data_out: out std_logic_vector(15 downto 0)
 	);
