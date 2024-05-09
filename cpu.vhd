@@ -9,7 +9,6 @@ entity cpu is
 		debug_dm_address: in std_logic_vector(5 downto 0);
 		debug_rf_data: out std_logic_vector(15 downto 0);
 		debug_dm_data: out std_logic_vector(15 downto 0);
-		test_output: out std_logic_vector(13 downto 0);
 		c, z: out std_logic
 	);
 end entity cpu;
@@ -35,6 +34,11 @@ architecture bhv of cpu is
 	signal ex_id: std_logic_vector(13 downto 0);
 	
 	-- RR stage signals
+	signal is_load: std_logic;
+	signal read_hazard_out: std_logic;
+	
+	signal forward_a_out_rr, forward_b_out_rr: std_logic_vector(15 downto 0);
+	
 	signal read_a_rr, read_b_rr: std_logic_vector(2 downto 0);
 	signal imm6_rr: std_logic_vector(5 downto 0);
 	signal imm9_rr: std_logic_vector(8 downto 0);
@@ -102,7 +106,7 @@ begin
 	);
 
 	pc_block: entity work.program_counter port map (
-		clock, '1', reset,
+		clock, not read_hazard_out, reset,
 		pc_mux_out,
 		pc_out_if
 	);
@@ -121,7 +125,7 @@ begin
 	-- IF-ID pipeline block
 	
 	if_id_pipeline_block: entity work.if_id_pipeline port map (
-		clock, '1', reset, branch_taken,
+		clock, not read_hazard_out, reset, branch_taken,
 		pc_out_if, 
 		im_memory_out_if,
 		pc_out_id,
@@ -147,7 +151,7 @@ begin
 	-- ID-RR pipeline block
 	
 	id_rr_pipeline_block: entity work.id_rr_pipeline port map (
-		clock, '1', reset, branch_taken,
+		clock, not read_hazard_out, reset, branch_taken,
 		wb_id,
 		wb_rr,
 		mem_id,
@@ -191,18 +195,37 @@ begin
 		se9_rr
 	);
 	
+	forwarding_block: entity work.forwarding port map (
+		wb_ex(0), wb_mem(0), wb_wb(0),
+		wb_ex(3 downto 1), wb_mem(3 downto 1), wb_wb(3 downto 1),
+		not wb_ex(4), wb_mem(4),
+		dm_address_ex, dm_data_mem, dm_address_mem, wb_data,
+		read_a_rr, read_b_rr,
+		reg_a_rr, reg_b_rr,
+		forward_a_out_rr, forward_b_out_rr
+	);
+	
 	-- RR-EX pipeline block
 	
 	rr_ex_pipeline_block: entity work.rr_ex_pipeline port map (
-		clock, '1', reset, '0',
+		clock, '1', reset, read_hazard_out,
 		wb_rr,
 		wb_ex,
 		mem_rr,
 		mem_ex,
 		ex_rr,
 		ex_ex,
-		reg_a_rr, reg_b_rr, se6_rr, se9_rr, lli_rr, pc_out_rr,
+		forward_a_out_rr, forward_b_out_rr, se6_rr, se9_rr, lli_rr, pc_out_rr,
 		reg_a_ex, reg_b_ex, se6_ex, se9_ex, lli_ex, pc_out_ex
+	);
+	
+	is_load <= wb_ex(0) and wb_ex(4);
+	
+	read_hazard_block: entity work.read_hazard port map (
+		is_load,
+		wb_ex(3 downto 1),
+		read_a_rr, read_b_rr, 
+		read_hazard_out
 	);
 	
 	-- EX stage
@@ -220,8 +243,6 @@ begin
 	);
 	
 	modify_c <= (not ex_ex(11)) and ex_ex(0);
-	
-	test_output <= ex_ex;
 	
 	flag_block: entity work.flag port map (
 		clock, '1', reset,
