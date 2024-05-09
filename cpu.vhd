@@ -19,6 +19,8 @@ architecture bhv of cpu is
 	signal pc_mux_out: std_logic_vector(15 downto 0);
 	signal pc_out_if: std_logic_vector(15 downto 0);
 	
+	signal hazard_enable: std_logic;
+	
 	signal im_memory_out_if: std_logic_vector(15 downto 0);
 	
 	-- ID stage signals
@@ -36,6 +38,8 @@ architecture bhv of cpu is
 	-- RR stage signals
 	signal is_load: std_logic;
 	signal read_hazard_out: std_logic;
+	
+	signal ex_is_alu_out: std_logic;
 	
 	signal forward_a_out_rr, forward_b_out_rr: std_logic_vector(15 downto 0);
 	
@@ -98,6 +102,8 @@ architecture bhv of cpu is
 	signal dm_data_wb, dm_address_wb: std_logic_vector(15 downto 0);
 	
 begin
+	hazard_enable <= not read_hazard_out;
+
 	-- IF stage
 	pc_mux: entity work.mux_2x1 port map (
 		branch_taken,
@@ -106,7 +112,7 @@ begin
 	);
 
 	pc_block: entity work.program_counter port map (
-		clock, not read_hazard_out, reset,
+		clock, hazard_enable, reset,
 		pc_mux_out,
 		pc_out_if
 	);
@@ -125,7 +131,7 @@ begin
 	-- IF-ID pipeline block
 	
 	if_id_pipeline_block: entity work.if_id_pipeline port map (
-		clock, not read_hazard_out, reset, branch_taken,
+		clock, hazard_enable, reset, branch_taken,
 		pc_out_if, 
 		im_memory_out_if,
 		pc_out_id,
@@ -151,7 +157,7 @@ begin
 	-- ID-RR pipeline block
 	
 	id_rr_pipeline_block: entity work.id_rr_pipeline port map (
-		clock, not read_hazard_out, reset, branch_taken,
+		clock, hazard_enable, reset, branch_taken,
 		wb_id,
 		wb_rr,
 		mem_id,
@@ -195,10 +201,12 @@ begin
 		se9_rr
 	);
 	
+	ex_is_alu_out <= not wb_ex(4);
+	
 	forwarding_block: entity work.forwarding port map (
 		wb_ex(0), wb_mem(0), wb_wb(0),
 		wb_ex(3 downto 1), wb_mem(3 downto 1), wb_wb(3 downto 1),
-		not wb_ex(4), wb_mem(4),
+		ex_is_alu_out, wb_mem(4),
 		dm_address_ex, dm_data_mem, dm_address_mem, wb_data,
 		read_a_rr, read_b_rr,
 		reg_a_rr, reg_b_rr,

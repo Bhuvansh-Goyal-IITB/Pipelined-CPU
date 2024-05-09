@@ -15,7 +15,7 @@ begin
 	clock <= not clock after 10 ns;
 	reset <= '1', '0' after 100 ns;
 
-	debug_rf_address <= "000";
+	debug_rf_address <= "001";
 	debug_dm_address <= "000000";
 	
 	dut: entity work.cpu port map (
