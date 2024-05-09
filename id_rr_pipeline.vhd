@@ -8,8 +8,8 @@ entity id_rr_pipeline is
 		wb_in: in std_logic_vector(4 downto 0);
 		wb_out: out std_logic_vector(4 downto 0);
 		
-		is_mem_store_in: in std_logic;
-		is_mem_store_out: out std_logic;
+		mem_in: in std_logic;
+		mem_out: out std_logic;
 		
 		ex_in: in std_logic_vector(13 downto 0);
 		ex_out: out std_logic_vector(13 downto 0);
@@ -31,7 +31,7 @@ architecture bhv of id_rr_pipeline is
 	signal read_a, read_b: std_logic_vector(2 downto 0);
 	signal imm6: std_logic_vector(5 downto 0);
 	signal imm9: std_logic_vector(8 downto 0);
-	signal pc: std_logic_vector(5 downto 0);
+	signal pc: std_logic_vector(15 downto 0);
 begin
 	wb_block: entity work.wb_pipeline 
 		port map (
@@ -43,8 +43,8 @@ begin
 	mem_block: entity work.mem_pipeline 
 		port map (
 			clock, enable, reset, flush,
-			is_mem_store_in,
-			is_mem_store_out
+			mem_in,
+			mem_out
 		);
 	
 	ex_block: entity work.ex_pipeline

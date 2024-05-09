@@ -8,8 +8,8 @@ entity ex_mem_pipeline is
 		wb_in: in std_logic_vector(4 downto 0);
 		wb_out: out std_logic_vector(4 downto 0);
 		
-		is_mem_store_in: in std_logic;
-		is_mem_store_out: out std_logic;
+		mem_in: in std_logic;
+		mem_out: out std_logic;
 		
 		reg_a_in, dm_address_in: in std_logic_vector(15 downto 0);
 		reg_a_out, dm_address_out: out std_logic_vector(15 downto 0)
@@ -29,8 +29,8 @@ begin
 	mem_block: entity work.mem_pipeline 
 		port map (
 			clock, enable, reset, flush,
-			is_mem_store_in,
-			is_mem_store_out
+			mem_in,
+			mem_out
 		);
 
 	flush_proc: process(flush, reg_a, dm_address)

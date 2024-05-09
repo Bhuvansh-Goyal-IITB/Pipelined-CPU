@@ -13,7 +13,7 @@ end entity wb_pipeline;
 -- wb --> leftmost bit => wb_control, next 3 bits wb_dest, next bit is_wb
 
 architecture bhv of wb_pipeline is
-	signal wb: std_logic_vector(5 downto 0);
+	signal wb: std_logic_vector(4 downto 0);
 begin
 	flush_proc: process(flush, wb) 
 	begin

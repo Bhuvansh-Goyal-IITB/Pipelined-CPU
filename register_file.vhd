@@ -6,7 +6,8 @@ entity register_file is
 	port (
 		clock, enable, reset: in std_logic;
 		debug_rf_address: in std_logic_vector(2 downto 0);
-		reg_a_address, reg_b_address, write_reg_address: in std_logic_vector(2 downto 0);
+		reg_a_address, reg_b_address: in std_logic_vector(2 downto 0);
+		write_reg_address: in std_logic_vector(2 downto 0);
 		write_data: in std_logic_vector(15 downto 0);
 		debug_rf_data: out std_logic_vector(15 downto 0);
 		reg_a_data, reg_b_data: out std_logic_vector(15 downto 0)

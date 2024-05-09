@@ -15,7 +15,7 @@ end entity ex_pipeline;
 
 
 architecture bhv of ex_pipeline is
-	signal ex: std_logic_vector(14 downto 0);
+	signal ex: std_logic_vector(13 downto 0);
 begin	
 	flush_proc: process(flush, ex)
 	begin
