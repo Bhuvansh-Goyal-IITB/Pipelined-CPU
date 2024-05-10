@@ -15,21 +15,18 @@ end entity wb_pipeline;
 architecture bhv of wb_pipeline is
 	signal wb: std_logic_vector(4 downto 0);
 begin
-	flush_proc: process(flush, wb) 
-	begin
-		if (flush = '1') then
-			wb_out <= (others => '0');
-		else 
-			wb_out <= wb;
-		end if;
-	end process flush_proc;
-
-	clock_proc: process(clock, enable, reset)
+	wb_out <= wb;
+	
+	clock_proc: process(clock, enable, reset, flush)
 	begin
 		if (reset = '1') then
 			wb <= (others => '0');
 		elsif (clock'event and clock = '1' and enable = '1') then
-			wb <= wb_in;
+			if (flush = '1') then
+				wb <= (others => '0');
+			else 
+				wb <= wb_in;
+			end if;
 		end if;
 	end process clock_proc;
 end architecture bhv;

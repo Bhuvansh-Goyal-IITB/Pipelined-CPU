@@ -9,6 +9,7 @@ entity cpu is
 		debug_dm_address: in std_logic_vector(5 downto 0);
 		debug_rf_data: out std_logic_vector(15 downto 0);
 		debug_dm_data: out std_logic_vector(15 downto 0);
+		test: out std_logic;
 		c, z: out std_logic
 	);
 end entity cpu;
@@ -18,12 +19,18 @@ architecture bhv of cpu is
 	signal pc_adder_out_if: std_logic_vector(15 downto 0);
 	signal pc_mux_out: std_logic_vector(15 downto 0);
 	signal pc_out_if: std_logic_vector(15 downto 0);
+	signal pc_enable: std_logic := '1';
 	
-	signal hazard_enable: std_logic;
+	signal if_id_enable: std_logic := '1';
+	signal id_rr_enable: std_logic := '1';
+	signal rr_ex_flush: std_logic := '0';
+
 	
 	signal im_memory_out_if: std_logic_vector(15 downto 0);
 	
 	-- ID stage signals
+	signal is_read_a_id, is_read_b_id: std_logic;
+	
 	signal im_memory_out_id: std_logic_vector(15 downto 0);
 	signal pc_out_id: std_logic_vector(15 downto 0);
 	
@@ -35,11 +42,11 @@ architecture bhv of cpu is
 	signal mem_id: std_logic;
 	signal ex_id: std_logic_vector(13 downto 0);
 	
-	-- RR stage signals
-	signal is_load: std_logic;
-	signal read_hazard_out: std_logic;
+	-- RR stage signals	
+	signal is_read_a_rr, is_read_b_rr: std_logic;
 	
 	signal ex_is_alu_out: std_logic;
+	signal read_hazard_out: std_logic;
 	
 	signal forward_a_out_rr, forward_b_out_rr: std_logic_vector(15 downto 0);
 	
@@ -100,10 +107,7 @@ architecture bhv of cpu is
 	signal wb_data: std_logic_vector(15 downto 0);
 	
 	signal dm_data_wb, dm_address_wb: std_logic_vector(15 downto 0);
-	
 begin
-	hazard_enable <= not read_hazard_out;
-
 	-- IF stage
 	pc_mux: entity work.mux_2x1 port map (
 		branch_taken,
@@ -112,7 +116,7 @@ begin
 	);
 
 	pc_block: entity work.program_counter port map (
-		clock, hazard_enable, reset,
+		clock, pc_enable, reset,
 		pc_mux_out,
 		pc_out_if
 	);
@@ -131,7 +135,7 @@ begin
 	-- IF-ID pipeline block
 	
 	if_id_pipeline_block: entity work.if_id_pipeline port map (
-		clock, hazard_enable, reset, branch_taken,
+		clock, if_id_enable, reset, branch_taken,
 		pc_out_if, 
 		im_memory_out_if,
 		pc_out_id,
@@ -151,19 +155,21 @@ begin
 		im_memory_out_id,
 		wb_id,
 		mem_id,
+		is_read_a_id, is_read_b_id,
 		ex_id
 	);
 	
 	-- ID-RR pipeline block
-	
 	id_rr_pipeline_block: entity work.id_rr_pipeline port map (
-		clock, hazard_enable, reset, branch_taken,
+		clock, id_rr_enable, reset, branch_taken,
 		wb_id,
 		wb_rr,
 		mem_id,
 		mem_rr,
 		ex_id,
 		ex_rr,
+		is_read_a_id, is_read_b_id,
+		is_read_a_rr, is_read_b_rr,
 		read_a_id, read_b_id,
 		imm6_id,
 		imm9_id,
@@ -201,22 +207,10 @@ begin
 		se9_rr
 	);
 	
-	ex_is_alu_out <= not wb_ex(4);
-	
-	forwarding_block: entity work.forwarding port map (
-		wb_ex(0), wb_mem(0), wb_wb(0),
-		wb_ex(3 downto 1), wb_mem(3 downto 1), wb_wb(3 downto 1),
-		ex_is_alu_out, wb_mem(4),
-		dm_address_ex, dm_data_mem, dm_address_mem, wb_data,
-		read_a_rr, read_b_rr,
-		reg_a_rr, reg_b_rr,
-		forward_a_out_rr, forward_b_out_rr
-	);
-	
 	-- RR-EX pipeline block
 	
 	rr_ex_pipeline_block: entity work.rr_ex_pipeline port map (
-		clock, '1', reset, read_hazard_out,
+		clock, '1', reset, rr_ex_flush,
 		wb_rr,
 		wb_ex,
 		mem_rr,
@@ -225,15 +219,6 @@ begin
 		ex_ex,
 		forward_a_out_rr, forward_b_out_rr, se6_rr, se9_rr, lli_rr, pc_out_rr,
 		reg_a_ex, reg_b_ex, se6_ex, se9_ex, lli_ex, pc_out_ex
-	);
-	
-	is_load <= wb_ex(0) and wb_ex(4);
-	
-	read_hazard_block: entity work.read_hazard port map (
-		is_load,
-		wb_ex(3 downto 1),
-		read_a_rr, read_b_rr, 
-		read_hazard_out
 	);
 	
 	-- EX stage
@@ -348,5 +333,30 @@ begin
 		wb_data
 	);
 	
+	
+	ex_is_alu_out <= not wb_ex(4);
+	
+	forwarding_block: entity work.forwarding port map (
+		wb_ex(0), wb_mem(0), wb_wb(0),
+		wb_ex(3 downto 1), wb_mem(3 downto 1), wb_wb(3 downto 1),
+		ex_is_alu_out, wb_mem(4),
+		dm_address_ex, dm_data_mem, dm_address_mem, wb_data,
+		read_a_rr, read_b_rr,
+		reg_a_rr, reg_b_rr,
+		forward_a_out_rr, forward_b_out_rr
+	);
+		
+	read_hazard_block: entity work.read_hazard port map (
+		is_read_a_rr, is_read_b_rr,
+		wb_ex,
+		read_a_rr, read_b_rr, 
+		read_hazard_out
+	);
+	
+	test <= read_hazard_out;
+	pc_enable <= not read_hazard_out;
+	if_id_enable <= not read_hazard_out;
+	id_rr_enable <= not read_hazard_out;
+	rr_ex_flush <= read_hazard_out or branch_taken;
 end architecture bhv;
 	

@@ -42,27 +42,15 @@ begin
 			ex_in, 
 			ex_out
 		);
-
-	flush_proc: process(flush, reg_a, reg_b, se6, se9, lli, pc)
-	begin
-		if (flush = '1') then 
-			reg_a_out <= (others => '0');
-			reg_b_out <= (others => '0');
-			se6_out <= (others => '0');
-			se9_out <= (others => '0');
-			lli_out <= (others => '0');
-			pc_out <= (others => '0');
-		else 
-			reg_a_out <= reg_a;
-			reg_b_out <= reg_b;
-			se6_out <= se6;
-			se9_out <= se9;
-			lli_out <= lli;
-			pc_out <= pc;
-		end if;
-	end process flush_proc;
 		
-	clock_proc: process(clock, enable, reset)
+	reg_a_out <= reg_a;
+	reg_b_out <= reg_b;
+	se6_out <= se6;
+	se9_out <= se9;
+	lli_out <= lli;
+	pc_out <= pc;
+		
+	clock_proc: process(clock, enable, reset, flush)
 	begin
 		if (reset = '1') then
 			reg_a <= (others => '0');
@@ -72,12 +60,21 @@ begin
 			lli <= (others => '0');
 			pc <= (others => '0');
 		elsif (clock'event and clock = '1' and enable = '1') then
-			reg_a <= reg_a_in;
-			reg_b <= reg_b_in;
-			se6 <= se6_in;
-			se9 <= se9_in;
-			lli <= lli_in;
-			pc <= pc_in;
+			if (flush = '1') then
+				reg_a <= (others => '0');
+				reg_b <= (others => '0');
+				se6 <= (others => '0');
+				se9 <= (others => '0');
+				lli <= (others => '0');
+				pc <= (others => '0');
+			else 
+				reg_a <= reg_a_in;
+				reg_b <= reg_b_in;
+				se6 <= se6_in;
+				se9 <= se9_in;
+				lli <= lli_in;
+				pc <= pc_in;
+			end if;
 		end if;
 	end process clock_proc;
 end architecture bhv;

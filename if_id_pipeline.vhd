@@ -15,25 +15,22 @@ architecture bhv of if_id_pipeline is
 	signal instruction: std_logic_vector(15 downto 0);
 	signal pc: std_logic_vector(15 downto 0);
 begin
-	flush_proc: process(flush, pc, instruction)
-	begin 	
-		if (flush = '1') then
-			instruction_out <= x"E000";
-			pc_out <= (others => '0');
-		else 
-			instruction_out <= instruction;
-			pc_out <= pc;
-		end if;
-	end process flush_proc;
-
-	clock_proc: process(clock, enable, reset)
+	instruction_out <= instruction;
+	pc_out <= pc;
+	
+	clock_proc: process(clock, enable, reset, flush)
 	begin
 		if (reset = '1') then
 			instruction <= x"E000";
 			pc <= (others => '0');
 		elsif (clock'event and clock = '1' and enable = '1') then
-			instruction <= instruction_in;
-			pc <= pc_in;
+			if (flush = '1') then
+				instruction <= x"E000";
+				pc <= (others => '0');
+			else 
+				instruction <= instruction_in;
+				pc <= pc_in;
+			end if;
 		end if;
 	end process clock_proc;
 end architecture bhv;

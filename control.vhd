@@ -6,6 +6,7 @@ entity control is
 		instruction_in: in std_logic_vector(15 downto 0);
 		wb_out: out std_logic_vector(4 downto 0);
 		mem_out: out std_logic;
+		is_read_a, is_read_b: out std_logic;
 		ex_out: out std_logic_vector(13 downto 0)
 	);
 end entity control;
@@ -17,12 +18,16 @@ begin
 	begin
 		-- NO OP
 		if (instruction_in(15 downto 12) = "1110") then
+			is_read_a <= '0';
+			is_read_b <= '0';
 			wb_out <= (others => '0');
 			mem_out <= '0';
 			ex_out <= (others => '0');
 		-- ADD
 		elsif (instruction_in(15 downto 12) = "0001") then
 			wb_out <= '0' & instruction_in(5 downto 3) & '1';
+			is_read_a <= '1';
+			is_read_b <= '1';
 			mem_out <= '0';
 			
 			if (instruction_in(2) = '0') then
@@ -58,6 +63,8 @@ begin
 		-- NAND
 		elsif (instruction_in(15 downto 12) = "0010") then
 			wb_out <= '0' & instruction_in(5 downto 3) & '1';
+			is_read_a <= '1';
+			is_read_b <= '1';
 			mem_out <= '0';
 			
 			if (instruction_in(2) = '0') then
@@ -87,56 +94,76 @@ begin
 		-- ADI
 		elsif (instruction_in(15 downto 12) = "0000") then
 			wb_out <= '0' & instruction_in(8 downto 6) & '1';
+			is_read_a <= '1';
+			is_read_b <= '0';
 			mem_out <= '0';
 			ex_out <= "00000000110001";
 		
 		-- LLI
 		elsif (instruction_in(15 downto 12) = "0011") then
 			wb_out <= '0' & instruction_in(11 downto 9) & '1';
+			is_read_a <= '0';
+			is_read_b <= '0';
 			mem_out <= '0';
 			ex_out <= "10000000000000";
 		
 		-- LW
 		elsif (instruction_in(15 downto 12) = "0100") then
 			wb_out <= '1' & instruction_in(11 downto 9) & '1';
+			is_read_a <= '0';
+			is_read_b <= '1';
 			mem_out <= '0';
 			ex_out <= "00000000100000";
 		
 		-- SW
 		elsif (instruction_in(15 downto 12) = "0101") then
 			wb_out <= (others => '0');
+			is_read_a <= '0';
+			is_read_b <= '1';
 			mem_out <= '1';
 			ex_out <= "00000000100000";
 		
 		-- BEQ
 		elsif (instruction_in(15 downto 12) = "1000") then
 			wb_out <= (others => '0');
+			is_read_a <= '1';
+			is_read_b <= '1';
 			mem_out <= '0';
 			ex_out <= "00000000010010";
 			
 		-- BLT
 		elsif (instruction_in(15 downto 12) = "1001") then
 			wb_out <= (others => '0');
+			is_read_a <= '1';
+			is_read_b <= '1';
 			mem_out <= '0';
 			ex_out <= "00000000010100";
 		-- BLE
 		elsif (instruction_in(15 downto 12) = "1010") then
 			wb_out <= (others => '0');
+			is_read_a <= '1';
+			is_read_b <= '1';
 			mem_out <= '0';
 			ex_out <= "00000000010110";
 		-- JAL
 		elsif (instruction_in(15 downto 12) = "1100") then
 			wb_out <= '0' & instruction_in(11 downto 9) & '1';
+			is_read_a <= '0';
+			is_read_b <= '0';
 			mem_out <= '0';
 			ex_out <= "01000001011000";
 		-- JLR
 		elsif (instruction_in(15 downto 12) = "1101") then
 			wb_out <= '0' & instruction_in(11 downto 9) & '1';
+			is_read_a <= '0';
+			is_read_b <= '1';
 			mem_out <= '0';
 			ex_out <= "01000000001010";
 		-- JRI
 		elsif (instruction_in(15 downto 12) = "1111") then
 			wb_out <= (others => '0');
+			is_read_a <= '1';
+			is_read_b <= '0';
 			mem_out <= '0';
 			ex_out <= "00000001111100";
 		end if;

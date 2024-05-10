@@ -23,16 +23,8 @@ begin
 			wb_out
 		);
 		
-	flush_proc: process(flush, dm_data, dm_address)
-	begin
-		if (flush = '1') then 
-			dm_data_out <= (others => '0');
-			dm_address_out <= (others => '0');
-		else 
-			dm_data_out <= dm_data;
-			dm_address_out <= dm_address;
-		end if;
-	end process flush_proc;
+	dm_data_out <= dm_data;
+	dm_address_out <= dm_address;
 		
 	clock_proc: process(clock, enable, reset)
 	begin
@@ -40,8 +32,13 @@ begin
 			dm_data <= (others => '0');
 			dm_address <= (others => '0');
 		elsif (clock'event and clock = '1' and enable = '1') then
-			dm_data  <= dm_data_in;
-			dm_address <= dm_address_in;
+			if (flush = '1') then
+				dm_data <= (others => '0');
+				dm_address <= (others => '0');
+			else 
+				dm_data  <= dm_data_in;
+				dm_address <= dm_address_in;
+			end if;
 		end if;
 	end process clock_proc;
 end architecture bhv;

@@ -33,25 +33,22 @@ begin
 			mem_out
 		);
 
-	flush_proc: process(flush, reg_a, dm_address)
-	begin
-		if (flush = '1') then 
-			reg_a_out <= (others => '0');
-			dm_address_out <= (others => '0');
-		else 
-			reg_a_out <= reg_a;
-			dm_address_out <= dm_address;
-		end if;
-	end process flush_proc;
+	reg_a_out <= reg_a;
+	dm_address_out <= dm_address;
 		
-	clock_proc: process(clock, enable, reset)
+	clock_proc: process(clock, enable, reset, flush)
 	begin
 		if (reset = '1') then
 			reg_a <= (others => '0');
 			dm_address <= (others => '0');
 		elsif (clock'event and clock = '1' and enable = '1') then
-			reg_a <= reg_a_in;
-			dm_address <= dm_address_in;
+			if (flush = '1') then
+				reg_a <= (others => '0');
+				dm_address <= (others => '0');
+			else 
+				reg_a <= reg_a_in;
+				dm_address <= dm_address_in;
+			end if;
 		end if;
 	end process clock_proc;
 end architecture bhv;

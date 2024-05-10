@@ -17,21 +17,18 @@ end entity ex_pipeline;
 architecture bhv of ex_pipeline is
 	signal ex: std_logic_vector(13 downto 0);
 begin	
-	flush_proc: process(flush, ex)
-	begin
-		if (flush = '1') then 
-			ex_out <= (others => '0');
-		else
-			ex_out <= ex;
-		end if;
-	end process flush_proc;
+	ex_out <= ex;
 	
-	clock_proc: process(clock, enable, reset)
+	clock_proc: process(clock, enable, reset, flush)
 	begin
 		if (reset = '1') then
 			ex <= (others => '0');
 		elsif (clock'event and clock = '1' and enable = '1') then
-			ex <= ex_in;
+			if (flush = '1') then 
+				ex <= (others => '0');
+			else 
+				ex <= ex_in;
+			end if;
 		end if;
 	end process clock_proc;
 end architecture bhv;
